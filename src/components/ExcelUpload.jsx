@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { Form, Button } from "react-bootstrap";
+const API = import.meta.env.VITE_API_URL;
+
 
 function ExcelUpload({ onUploadSuccess }) {
   const [file, setFile] = useState(null);
@@ -19,7 +21,7 @@ function ExcelUpload({ onUploadSuccess }) {
     formData.append("file", file);
 
     try {
-      await axios.post("http://localhost:8000/upload-excel/", formData, {
+      await axios.post(`${API}/upload-excel/`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       alert("Excel başarıyla yüklendi!");
