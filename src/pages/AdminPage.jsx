@@ -11,7 +11,7 @@ const AdminPage = () => {
   const [newPrice, setNewPrice] = useState("");
   const [newCurrency, setNewCurrency] = useState("");
 
-  const API_URL = "https://tezgah-api.onrender.com";
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const fetchData = async () => {
     try {
@@ -33,7 +33,10 @@ const AdminPage = () => {
   useEffect(() => {
     const lower = search.toLowerCase();
     const result = products.filter((product) =>
-      product.name.toLowerCase().includes(lower)
+      product.name.toLowerCase().includes(lower) ||
+      product.colors.some((color) =>
+        color.name.toLowerCase().includes(lower)
+      )
     );
     setFiltered(result);
   }, [search, products]);
@@ -82,55 +85,153 @@ const AdminPage = () => {
   };
 
   return (
-    <div className="admin-container">
-      <h2>🛠️ Admin Paneli</h2>
+    <div className="admin-page" style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
+      <h2 style={{ textAlign: "center", marginBottom: "1.5rem" }}>🛠️ Admin Paneli</h2>
 
+      {/* Arama Kutusu */}
       <input
         type="text"
         placeholder="Ürün veya renk ara..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
+        style={{
+          padding: "0.6rem 1rem",
+          width: "100%",
+          maxWidth: "400px",
+          marginBottom: "1rem",
+          borderRadius: "8px",
+          border: "1px solid #ccc",
+          fontSize: "1rem",
+          display: "block",
+          marginLeft: "auto",
+          marginRight: "auto"
+        }}
       />
 
-      <div style={{ marginTop: "15px" }}>
-        <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-        <button onClick={handleExcelUpload}>Excel Yükle</button>
+      {/* Excel Yükleme Alanı */}
+      <div style={{ marginTop: "10px", textAlign: "center", marginBottom: "1.5rem" }}>
+        <input
+          type="file"
+          onChange={(e) => setFile(e.target.files[0])}
+          style={{
+            padding: "0.5rem",
+            border: "1px solid #ccc",
+            borderRadius: "5px",
+            marginRight: "10px"
+          }}
+        />
+        <button
+          onClick={handleExcelUpload}
+          style={{
+            padding: "0.5rem 1rem",
+            backgroundColor: "#007bff",
+            color: "#fff",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer"
+          }}
+        >
+          Excel Yükle
+        </button>
       </div>
 
-      <div className="products-grid">
+      {/* Ürün Listesi */}
+      <div className="product-list" style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "2rem" }}>
         {filtered.map((product) => (
-          <div key={product.id} className="product-card">
-            <h4>{product.name}</h4>
-            {product.colors.map((color) => (
-              <div key={color.id} className="color-row">
-                {editItem === color.id ? (
-                  <>
-                    <input
-                      value={newName}
-                      onChange={(e) => setNewName(e.target.value)}
-                    />
-                    <input
-                      value={newPrice}
-                      onChange={(e) => setNewPrice(e.target.value)}
-                    />
-                    <input
-                      value={newCurrency}
-                      onChange={(e) => setNewCurrency(e.target.value)}
-                    />
-                    <button onClick={() => handleUpdate(color.id)}>✔</button>
-                    <button onClick={() => setEditItem(null)}>✖</button>
-                  </>
-                ) : (
-                  <>
-                    <span>
-                      {color.name} - {color.price} {color.currency}
-                    </span>
-                    <button onClick={() => handleEdit(color)}>Düzenle</button>
-                    <button onClick={() => handleDelete(color.id)}>Sil</button>
-                  </>
-                )}
-              </div>
-            ))}
+          <div key={product.id} className="product-card" style={{
+            flex: "1 1 300px",
+            border: "1px solid #eee",
+            borderRadius: "10px",
+            padding: "1rem",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.05)"
+          }}>
+            <h3 style={{ marginBottom: "0.5rem", borderBottom: "1px solid #ccc", paddingBottom: "0.4rem" }}>
+              {product.name}
+            </h3>
+            {product.colors.length === 0 ? (
+              <p>Renk yok</p>
+            ) : (
+              product.colors.map((color) => (
+                <div key={color.id} style={{
+                  marginBottom: "0.5rem",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center"
+                }}>
+                  {editItem === color.id ? (
+                    <>
+                      <input
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        style={{ marginRight: "5px", width: "25%" }}
+                      />
+                      <input
+                        value={newPrice}
+                        onChange={(e) => setNewPrice(e.target.value)}
+                        style={{ marginRight: "5px", width: "20%" }}
+                      />
+                      <input
+                        value={newCurrency}
+                        onChange={(e) => setNewCurrency(e.target.value)}
+                        style={{ marginRight: "5px", width: "20%" }}
+                      />
+                      <button onClick={() => handleUpdate(color.id)} style={{
+                        marginRight: "4px",
+                        backgroundColor: "#5cb85c",
+                        color: "white",
+                        padding: "0.3rem 0.6rem",
+                        border: "none",
+                        borderRadius: "4px"
+                      }}>✔</button>
+                      <button onClick={() => setEditItem(null)} style={{
+                        backgroundColor: "#999",
+                        color: "white",
+                        padding: "0.3rem 0.6rem",
+                        border: "none",
+                        borderRadius: "4px"
+                      }}>✖</button>
+                    </>
+                  ) : (
+                    <>
+                      <div>
+                        <strong>{color.name}</strong> – {color.price} {color.currency}
+                      </div>
+                      <div>
+                        <button
+                          onClick={() => handleEdit(color)}
+                          style={{
+                            marginRight: "0.5rem",
+                            padding: "0.3rem 0.6rem",
+                            fontSize: "0.85rem",
+                            backgroundColor: "#f0ad4e",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "5px",
+                            cursor: "pointer"
+                          }}
+                        >
+                          Düzenle
+                        </button>
+                        <button
+                          onClick={() => handleDelete(color.id)}
+                          style={{
+                            padding: "0.3rem 0.6rem",
+                            fontSize: "0.85rem",
+                            backgroundColor: "#d9534f",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "5px",
+                            cursor: "pointer"
+                          }}
+                        >
+                          Sil
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         ))}
       </div>
