@@ -1,73 +1,132 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
 import ExcelUpload from "../components/ExcelUpload";
-const API = import.meta.env.VITE_API_URL;
+import axios from "axios";
 
-function AdminPage() {
+const AdminPage = () => {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // 🔄 API'den verileri al
-  const fetchProducts = (term = "") => {
-    axios
-      .get(`${API}/products/`)
-      .then((res) => {
-        const filtered = term.trim()
-          ? res.data.filter((product) =>
-              product.name.toLowerCase().includes(term.toLowerCase()) ||
-              product.colors.some((color) =>
-                color.name.toLowerCase().includes(term.toLowerCase())
-              )
-            )
-          : res.data; // 🔥 Arama boşsa tüm ürünleri göster
-
-        setProducts(filtered);
-      })
-      .catch((err) => console.error("API'den veri alınamadı:", err));
+  const fetchProducts = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/products/`);
+      setProducts(response.data);
+    } catch (error) {
+      console.error("Ürünler alınamadı:", error);
+    }
   };
 
-  // 🔃 Sayfa açılınca verileri getir
   useEffect(() => {
     fetchProducts();
   }, []);
 
-  // 🔍 Arama kutusu
-  const handleSearch = (e) => {
-    const term = e.target.value;
-    setSearchTerm(term);
-    fetchProducts(term);
+  const handleDelete = async (colorId) => {
+    const confirmed = window.confirm("Bu rengi silmek istediğinizden emin misiniz?");
+    if (!confirmed) return;
+
+    try {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/colors/${colorId}`);
+      fetchProducts(); // refresh data
+    } catch (error) {
+      console.error("Silme işlemi başarısız:", error);
+    }
   };
 
-  return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">Admin Panel</h2>
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.colors.some((color) =>
+      color.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
 
+  return (
+    <div className="admin-page" style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
+      <h2 style={{ textAlign: "center", marginBottom: "1.5rem" }}>🛠️ Admin Paneli</h2>
+
+      {/* Arama Kutusu */}
       <input
         type="text"
         placeholder="Ürün veya renk ara..."
         value={searchTerm}
-        onChange={handleSearch}
-        className="border p-2 rounded w-full mb-4"
+        onChange={(e) => setSearchTerm(e.target.value)}
+        style={{
+          padding: "0.6rem 1rem",
+          width: "100%",
+          maxWidth: "400px",
+          marginBottom: "1.5rem",
+          borderRadius: "8px",
+          border: "1px solid #ccc",
+          fontSize: "1rem"
+        }}
       />
 
-      <ExcelUpload onUploadSuccess={() => fetchProducts(searchTerm)} />
+      {/* Excel Yükleme */}
+      <ExcelUpload onUploadSuccess={fetchProducts} />
 
-      <div className="mt-6">
-        {products.map((product) => (
-          <div key={product.id} className="border p-3 rounded mb-4 shadow">
-            <h4 className="font-bold">{product.name}</h4>
-            <ul className="ml-4 list-disc">
-              {product.colors.map((color) => (
-                <li key={color.id}>
-                  {color.name} – {color.price} {color.currency}
-                </li>
-              ))}
-            </ul>
+      {/* Ürünler Listesi */}
+      <div className="product-list" style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "2rem" }}>
+        {filteredProducts.map((product) => (
+          <div key={product.id} className="product-card" style={{
+            flex: "1 1 300px",
+            border: "1px solid #eee",
+            borderRadius: "10px",
+            padding: "1rem",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.05)"
+          }}>
+            <h3 style={{ marginBottom: "0.5rem", borderBottom: "1px solid #ccc", paddingBottom: "0.4rem" }}>
+              {product.name}
+            </h3>
+            {product.colors.length === 0 ? (
+              <p>Renk yok</p>
+            ) : (
+              product.colors.map((color) => (
+                <div key={color.id} style={{
+                  marginBottom: "0.5rem",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center"
+                }}>
+                  <div>
+                    <strong>{color.name}</strong> – {color.price} {color.currency}
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => alert("Düzenleme özelliği yakında aktif!")}
+                      style={{
+                        marginRight: "0.5rem",
+                        padding: "0.3rem 0.6rem",
+                        fontSize: "0.85rem",
+                        backgroundColor: "#f0ad4e",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "5px",
+                        cursor: "pointer"
+                      }}
+                    >
+                      Düzenle
+                    </button>
+                    <button
+                      onClick={() => handleDelete(color.id)}
+                      style={{
+                        padding: "0.3rem 0.6rem",
+                        fontSize: "0.85rem",
+                        backgroundColor: "#d9534f",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "5px",
+                        cursor: "pointer"
+                      }}
+                    >
+                      Sil
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         ))}
       </div>
     </div>
   );
-}
+};
 
 export default AdminPage;
