@@ -78,141 +78,86 @@ const AdminPage = () => {
   );
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
-      <h2 style={{ textAlign: "center", marginBottom: "1.5rem" }}>🛠️ Admin Paneli</h2>
+    <div className="admin-container">
+      <h2 className="page-title">🛠️ Admin Paneli</h2>
 
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "1rem" }}>
-        <input
-          type="text"
-          placeholder="Ürün veya renk ara..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{
-            padding: "0.6rem 1rem",
-            width: "250px",
-            borderRadius: "8px",
-            border: "1px solid #ccc",
-            fontSize: "1rem",
-            textAlign: "center"
-          }}
-        />
-        <input
-          type="file"
-          accept=".xlsx"
-          onChange={handleFileChange}
-          style={{
-            padding: "0.6rem",
-            border: "1px solid #ccc",
-            borderRadius: "8px",
-            backgroundColor: "#f9f9f9",
-            fontSize: "0.95rem"
-          }}
-        />
-        <button
-          onClick={handleUpload}
-          style={{
-            padding: "0.6rem 1.2rem",
-            backgroundColor: "#007bff",
-            color: "white",
-            border: "none",
-            borderRadius: "8px",
-            fontSize: "1rem",
-            cursor: "pointer"
-          }}
-        >
-          Excel Yükle
-        </button>
+      <div className="controls-container">
+        <div className="search-container">
+          <input
+            type="text"
+            placeholder="Ürün veya renk ara..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+        </div>
+
+        <div className="file-controls">
+          <input
+            type="file"
+            accept=".xlsx"
+            onChange={handleFileChange}
+            className="file-input"
+          />
+          <button onClick={handleUpload} className="upload-button">
+            Excel Yükle
+          </button>
+        </div>
       </div>
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "2rem" }}>
+      <div className="products-grid">
         {filteredProducts.map((product) => (
-          <div key={product.id} style={{
-            flex: "1 1 300px",
-            border: "1px solid #eee",
-            borderRadius: "10px",
-            padding: "1rem",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.05)"
-          }}>
-            <h3 style={{ marginBottom: "0.5rem", borderBottom: "1px solid #ccc", paddingBottom: "0.4rem" }}>
-              {product.name}
-            </h3>
+          <div key={product.id} className="product-card">
+            <h3 className="product-title">{product.name}</h3>
             {product.colors.length === 0 ? (
-              <p>Renk yok</p>
+              <p className="no-color">Renk yok</p>
             ) : (
               product.colors.map((color) => (
-                <div key={color.id} style={{
-                  marginBottom: "0.5rem",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center"
-                }}>
+                <div key={color.id} className="color-item">
                   {editColor?.id === color.id ? (
-                    <>
-                      <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <div className="edit-mode">
+                      <div className="input-group">
                         <input
                           value={editColor.name}
                           onChange={(e) => handleEditChange(e, "name")}
-                          style={{ width: "90px", padding: "0.2rem" }}
+                          className="edit-input"
                         />
                         <input
                           value={editColor.price}
                           onChange={(e) => handleEditChange(e, "price")}
-                          style={{ width: "60px", padding: "0.2rem" }}
                           type="number"
+                          className="edit-input"
                         />
                         <input
                           value={editColor.currency}
                           onChange={(e) => handleEditChange(e, "currency")}
-                          style={{ width: "40px", padding: "0.2rem" }}
+                          className="edit-input currency"
                         />
                       </div>
-                      <button onClick={saveEdit} style={{
-                        padding: "0.3rem 0.6rem",
-                        backgroundColor: "#28a745",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "5px",
-                        cursor: "pointer",
-                        fontSize: "0.85rem"
-                      }}>Kaydet</button>
-                    </>
+                      <button onClick={saveEdit} className="save-button">
+                        Kaydet
+                      </button>
+                    </div>
                   ) : (
-                    <>
-                      <div>
+                    <div className="view-mode">
+                      <div className="color-info">
                         <strong>{color.name}</strong> – {color.price} {color.currency}
                       </div>
-                      <div>
+                      <div className="button-group">
                         <button
                           onClick={() => setEditColor(color)}
-                          style={{
-                            marginRight: "0.5rem",
-                            padding: "0.3rem 0.6rem",
-                            fontSize: "0.85rem",
-                            backgroundColor: "#f0ad4e",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "5px",
-                            cursor: "pointer"
-                          }}
+                          className="edit-button"
                         >
                           Düzenle
                         </button>
                         <button
                           onClick={() => handleDelete(color.id)}
-                          style={{
-                            padding: "0.3rem 0.6rem",
-                            fontSize: "0.85rem",
-                            backgroundColor: "#d9534f",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "5px",
-                            cursor: "pointer"
-                          }}
+                          className="delete-button"
                         >
                           Sil
                         </button>
                       </div>
-                    </>
+                    </div>
                   )}
                 </div>
               ))
