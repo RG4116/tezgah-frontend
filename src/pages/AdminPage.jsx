@@ -3,142 +3,121 @@ import axios from "axios";
 
 const AdminPage = () => {
   const [products, setProducts] = useState([]);
-  const [filtered, setFiltered] = useState([]);
-  const [search, setSearch] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [file, setFile] = useState(null);
-  const [editItem, setEditItem] = useState(null);
-  const [newName, setNewName] = useState("");
-  const [newPrice, setNewPrice] = useState("");
-  const [newCurrency, setNewCurrency] = useState("");
 
-  const API_URL = import.meta.env.VITE_API_URL;
-
-  const fetchData = async () => {
+  const fetchProducts = async () => {
     try {
-      const res = await axios.get(`${API_URL}/products/`);
-      setProducts(res.data);
-    } catch (err) {
-      console.error("Veri alınamadı", err);
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/products/`);
+      setProducts(response.data);
+    } catch (error) {
+      console.error("Ürünler alınamadı:", error);
     }
   };
 
   useEffect(() => {
-    if (search.trim()) {
-      fetchData();
+    if (searchTerm.trim()) {
+      fetchProducts();
     } else {
-      setFiltered([]);
+      setProducts([]);
     }
-  }, [search]);
+  }, [searchTerm]);
 
-  useEffect(() => {
-    const lower = search.toLowerCase();
-    const result = products.filter((product) =>
-      product.name.toLowerCase().includes(lower) ||
-      product.colors.some((color) =>
-        color.name.toLowerCase().includes(lower)
-      )
-    );
-    setFiltered(result);
-  }, [search, products]);
+  const handleDelete = async (colorId) => {
+    const confirmed = window.confirm("Bu rengi silmek istediğinizden emin misiniz?");
+    if (!confirmed) return;
 
-  const handleExcelUpload = async () => {
-    if (!file) return alert("Lütfen bir dosya seçin.");
+    try {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/colors/${colorId}`);
+      fetchProducts();
+    } catch (error) {
+      console.error("Silme işlemi başarısız:", error);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  const handleUpload = async () => {
+    if (!file) {
+      alert("Lütfen bir dosya seçin!");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("file", file);
+
     try {
-      await axios.post(`${API_URL}/upload-excel/`, formData);
+      await axios.post(`${import.meta.env.VITE_API_URL}/upload-excel/`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       alert("Excel başarıyla yüklendi!");
-      fetchData();
-    } catch (err) {
+      fetchProducts();
+    } catch (error) {
+      console.error("Excel yüklenirken hata oluştu:", error);
       alert("Excel yüklenirken hata oluştu.");
     }
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`${API_URL}/colors/${id}`);
-      fetchData();
-    } catch (err) {
-      alert("Silme başarısız!");
-    }
-  };
-
-  const handleEdit = (color) => {
-    setEditItem(color.id);
-    setNewName(color.name);
-    setNewPrice(color.price);
-    setNewCurrency(color.currency);
-  };
-
-  const handleUpdate = async (id) => {
-    try {
-      await axios.put(`${API_URL}/colors/${id}`, {
-        name: newName,
-        price: parseFloat(newPrice),
-        currency: newCurrency,
-      });
-      setEditItem(null);
-      fetchData();
-    } catch (err) {
-      alert("Güncelleme başarısız!");
-    }
-  };
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.colors.some((color) =>
+      color.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
 
   return (
-    <div className="admin-page" style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
+    <div style={{ padding: "2rem", maxWidth: "1200px", margin: "0 auto" }}>
       <h2 style={{ textAlign: "center", marginBottom: "1.5rem" }}>🛠️ Admin Paneli</h2>
 
-      {/* Arama Kutusu */}
-      <input
-        type="text"
-        placeholder="Ürün veya renk ara..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        style={{
-          padding: "0.6rem 1rem",
-          width: "100%",
-          maxWidth: "400px",
-          marginBottom: "1rem",
-          borderRadius: "8px",
-          border: "1px solid #ccc",
-          fontSize: "1rem",
-          display: "block",
-          marginLeft: "auto",
-          marginRight: "auto"
-        }}
-      />
-
-      {/* Excel Yükleme Alanı */}
-      <div style={{ marginTop: "10px", textAlign: "center", marginBottom: "1.5rem" }}>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "1rem" }}>
         <input
-          type="file"
-          onChange={(e) => setFile(e.target.files[0])}
+          type="text"
+          placeholder="Ürün veya renk ara..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
           style={{
-            padding: "0.5rem",
+            padding: "0.6rem 1rem",
+            width: "250px",
+            borderRadius: "8px",
             border: "1px solid #ccc",
-            borderRadius: "5px",
-            marginRight: "10px"
+            fontSize: "1rem",
+            textAlign: "center",
           }}
         />
-        <button
-          onClick={handleExcelUpload}
+
+        <input
+          type="file"
+          accept=".xlsx"
+          onChange={handleFileChange}
           style={{
-            padding: "0.5rem 1rem",
+            padding: "0.6rem",
+            border: "1px solid #ccc",
+            borderRadius: "8px",
+            cursor: "pointer",
+            backgroundColor: "#f9f9f9",
+          }}
+        />
+
+        <button
+          onClick={handleUpload}
+          style={{
+            padding: "0.6rem 1rem",
             backgroundColor: "#007bff",
-            color: "#fff",
+            color: "white",
             border: "none",
-            borderRadius: "5px",
-            cursor: "pointer"
+            borderRadius: "8px",
+            cursor: "pointer",
           }}
         >
           Excel Yükle
         </button>
       </div>
 
-      {/* Ürün Listesi */}
-      <div className="product-list" style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "2rem" }}>
-        {filtered.map((product) => (
-          <div key={product.id} className="product-card" style={{
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", marginTop: "2rem" }}>
+        {filteredProducts.map((product) => (
+          <div key={product.id} style={{
             flex: "1 1 300px",
             border: "1px solid #eee",
             borderRadius: "10px",
@@ -158,77 +137,40 @@ const AdminPage = () => {
                   justifyContent: "space-between",
                   alignItems: "center"
                 }}>
-                  {editItem === color.id ? (
-                    <>
-                      <input
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                        style={{ marginRight: "5px", width: "25%" }}
-                      />
-                      <input
-                        value={newPrice}
-                        onChange={(e) => setNewPrice(e.target.value)}
-                        style={{ marginRight: "5px", width: "20%" }}
-                      />
-                      <input
-                        value={newCurrency}
-                        onChange={(e) => setNewCurrency(e.target.value)}
-                        style={{ marginRight: "5px", width: "20%" }}
-                      />
-                      <button onClick={() => handleUpdate(color.id)} style={{
-                        marginRight: "4px",
-                        backgroundColor: "#5cb85c",
-                        color: "white",
+                  <div>
+                    <strong>{color.name}</strong> – {color.price} {color.currency}
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => alert("Düzenleme özelliği yakında aktif!")}
+                      style={{
+                        marginRight: "0.5rem",
                         padding: "0.3rem 0.6rem",
-                        border: "none",
-                        borderRadius: "4px"
-                      }}>✔</button>
-                      <button onClick={() => setEditItem(null)} style={{
-                        backgroundColor: "#999",
+                        fontSize: "0.85rem",
+                        backgroundColor: "#f0ad4e",
                         color: "white",
-                        padding: "0.3rem 0.6rem",
                         border: "none",
-                        borderRadius: "4px"
-                      }}>✖</button>
-                    </>
-                  ) : (
-                    <>
-                      <div>
-                        <strong>{color.name}</strong> – {color.price} {color.currency}
-                      </div>
-                      <div>
-                        <button
-                          onClick={() => handleEdit(color)}
-                          style={{
-                            marginRight: "0.5rem",
-                            padding: "0.3rem 0.6rem",
-                            fontSize: "0.85rem",
-                            backgroundColor: "#f0ad4e",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "5px",
-                            cursor: "pointer"
-                          }}
-                        >
-                          Düzenle
-                        </button>
-                        <button
-                          onClick={() => handleDelete(color.id)}
-                          style={{
-                            padding: "0.3rem 0.6rem",
-                            fontSize: "0.85rem",
-                            backgroundColor: "#d9534f",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "5px",
-                            cursor: "pointer"
-                          }}
-                        >
-                          Sil
-                        </button>
-                      </div>
-                    </>
-                  )}
+                        borderRadius: "5px",
+                        cursor: "pointer"
+                      }}
+                    >
+                      Düzenle
+                    </button>
+                    <button
+                      onClick={() => handleDelete(color.id)}
+                      style={{
+                        padding: "0.3rem 0.6rem",
+                        fontSize: "0.85rem",
+                        backgroundColor: "#d9534f",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "5px",
+                        cursor: "pointer"
+                      }}
+                    >
+                      Sil
+                    </button>
+                  </div>
                 </div>
               ))
             )}
