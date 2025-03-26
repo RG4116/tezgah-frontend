@@ -28,8 +28,16 @@ function ExcelUpload({ onUploadSuccess }) {
       onUploadSuccess(); // Başarıyla yüklenince verileri güncelle
     } catch (error) {
       console.error("Excel yüklenirken hata oluştu:", error);
-      alert("Excel yüklenirken hata oluştu.");
+      if (error.response && error.response.data) {
+        console.error("Sunucu cevabı:", error.response.data);
+        alert("Excel yüklenirken hata oluştu:\n" + (error.response?.data?.detail || error.message));
+      } else {
+        alert("İstek sırasında bir hata oluştu.");
+      }
     }
+    
+  
+  
   };
 
   return (
