@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { Container, Row, Col, Form, Card, Button } from "react-bootstrap";
 
 const AdminPage = () => {
   const [products, setProducts] = useState([]);
@@ -78,94 +79,99 @@ const AdminPage = () => {
   );
 
   return (
-    <div className="admin-container">
-      <h2 className="page-title">🛠️ Admin Paneli</h2>
+    <Container className="mt-5 px-3">
+      <h2 className="text-center fw-bold mb-4">🛠️ Admin Paneli</h2>
 
-      <div className="controls-container">
-        <div className="search-container">
-          <input
-            type="text"
-            placeholder="Ürün veya renk ara..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
-        </div>
+      <Card className="p-4 shadow-sm mb-4">
+        <Row className="gy-3 justify-content-center">
+          <Col xs={12} md={4}>
+            <Form.Control
+              placeholder="Ürün veya renk ara..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="rounded shadow-sm custom-focus text-center"
+            />
+          </Col>
+          <Col xs={12} md={4}>
+            <Form.Control
+              type="file"
+              accept=".xlsx"
+              onChange={handleFileChange}
+              className="rounded shadow-sm custom-focus"
+            />
+          </Col>
+          <Col xs={12} md="auto">
+            <Button onClick={handleUpload} className="shadow-sm">
+              Excel Yükle
+            </Button>
+          </Col>
+        </Row>
+      </Card>
 
-        <div className="file-controls">
-          <input
-            type="file"
-            accept=".xlsx"
-            onChange={handleFileChange}
-            className="file-input"
-          />
-          <button onClick={handleUpload} className="upload-button">
-            Excel Yükle
-          </button>
-        </div>
-      </div>
-
-      <div className="products-grid">
+      <Row className="gy-4">
         {filteredProducts.map((product) => (
-          <div key={product.id} className="product-card">
-            <h3 className="product-title">{product.name}</h3>
-            {product.colors.length === 0 ? (
-              <p className="no-color">Renk yok</p>
-            ) : (
-              product.colors.map((color) => (
-                <div key={color.id} className="color-item">
-                  {editColor?.id === color.id ? (
-                    <div className="edit-mode">
-                      <div className="input-group">
-                        <input
+          <Col key={product.id} xs={12} md={6} lg={4}>
+            <Card className="p-3 shadow-sm">
+              <Card.Title className="border-bottom pb-2 mb-2">{product.name}</Card.Title>
+              {product.colors.length === 0 ? (
+                <p>Renk yok</p>
+              ) : (
+                product.colors.map((color) => (
+                  <div key={color.id} className="d-flex justify-content-between align-items-center mb-2">
+                    {editColor?.id === color.id ? (
+                      <div className="w-100 d-flex gap-2">
+                        <Form.Control
                           value={editColor.name}
                           onChange={(e) => handleEditChange(e, "name")}
-                          className="edit-input"
+                          size="sm"
                         />
-                        <input
+                        <Form.Control
                           value={editColor.price}
                           onChange={(e) => handleEditChange(e, "price")}
+                          size="sm"
                           type="number"
-                          className="edit-input"
                         />
-                        <input
+                        <Form.Control
                           value={editColor.currency}
                           onChange={(e) => handleEditChange(e, "currency")}
-                          className="edit-input currency"
+                          size="sm"
                         />
+                        <Button variant="success" size="sm" onClick={saveEdit}>
+                          Kaydet
+                        </Button>
                       </div>
-                      <button onClick={saveEdit} className="save-button">
-                        Kaydet
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="view-mode">
-                      <div className="color-info">
-                        <strong>{color.name}</strong> – {color.price} {color.currency}
-                      </div>
-                      <div className="button-group">
-                        <button
-                          onClick={() => setEditColor(color)}
-                          className="edit-button"
-                        >
-                          Düzenle
-                        </button>
-                        <button
-                          onClick={() => handleDelete(color.id)}
-                          className="delete-button"
-                        >
-                          Sil
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
+                    ) : (
+                      <>
+                        <div>
+                          <strong>{color.name}</strong> – {color.price} {color.currency}
+                        </div>
+                        <div>
+                          <Button
+                            size="sm"
+                            variant="warning"
+                            className="me-2"
+                            onClick={() => setEditColor(color)}
+                          >
+                            Düzenle
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            onClick={() => handleDelete(color.id)}
+                          >
+                            Sil
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))
+              )}
+            </Card>
+          </Col>
         ))}
-      </div>
-    </div>
+      </Row>
+    </Container>
   );
 };
 
