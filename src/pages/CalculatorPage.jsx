@@ -12,7 +12,7 @@ function CalculatorPage() {
   const [selectedThickness, setSelectedThickness] = useState("h:4 cm");
 
   useEffect(() => {
-    axios.get("http://localhost:8000/products/")
+       axios.get(`${import.meta.env.VITE_API_URL}/products/`)
       .then(response => setProducts(response.data))
       .catch(error => console.error("Ürünler yüklenirken hata oluştu:", error));
   }, []);
